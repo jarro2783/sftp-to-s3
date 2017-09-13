@@ -19,7 +19,7 @@ const SftpToS3 = {
           return streamToString(fileStreams)
         })
         .then((dataArray) => {
-          return uploadToS3.putBatch(config.aws, dataArray)
+          return uploadToS3.putBatch(config, dataArray)
         })
         .then((files) => {
           sftp.mkdir(config.completedDir, true)

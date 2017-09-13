@@ -4,7 +4,10 @@ const AWS = require('aws-sdk')
 const expect = require('chai').expect
 const sinon = require('sinon')
 const uploadToS3 = require('../lib/uploadToS3')
-const S3 = {}
+const S3 = {
+  putObject: function() {
+  }
+}
 
 describe('uploadToS3', function() {
   sinon.stub(AWS, 'S3').callsFake(function() {
@@ -15,7 +18,12 @@ describe('uploadToS3', function() {
     sinon.stub(S3, 'putObject').callsFake(function(params) {
       expect(params.Bucket).to.eq('my-bucket')
       expect(params.Key).to.eq('/foo')
-      expect(params.Data).to.eq([])
+      expect(params.Body).to.eq('')
+      return {
+        promise: function() {
+          return Promise.resolve()
+        }
+      }
     })
 
     var config = {
@@ -25,7 +33,7 @@ describe('uploadToS3', function() {
       fileDownloadDir: 'prefix'
     }
 
-    uploadToS3.putBatch([
+    uploadToS3.putBatch(config, [
       {
         key: 'prefix/foo',
         data: []

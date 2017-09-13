@@ -5,7 +5,12 @@ const SftpToS3 = require('../index');
 const retrieveFileStreams = require('../lib/retrieveFileStreams');
 const Client = require('ssh2-sftp-client');
 const uploadToS3 = require('../lib/uploadToS3');
-const config = {test: "config", aws: {}};
+const config = {
+  aws: {
+    bucket: 'my-bucket'
+  },
+  fileDownloadDir: 'foo'
+};
 
 const sandbox = sinon.createSandbox()
 
@@ -32,6 +37,8 @@ describe("batch", function() {
     sandbox.stub(Client.prototype, 'end');
 
     sandbox.stub(uploadToS3, 'putBatch').callsFake(function(config, files) {
+      expect(config).to.have.property('fileDownloadDir')
+      expect(config).to.have.property('aws')
       expect(files.length).to.equal(1)
       expect(files[0].key).to.equal('meow')
       return Promise.resolve();
