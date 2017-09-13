@@ -43,6 +43,3 @@ const SftpToS3 = {
 }
 
 module.exports = SftpToS3
-
-
-  

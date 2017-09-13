@@ -7,25 +7,33 @@ const Client = require('ssh2-sftp-client');
 const uploadToS3 = require('../lib/uploadToS3');
 const config = {test: "config", aws: {}};
 
-describe("bypassSFTP", function() {
+const sandbox = sinon.createSandbox()
+
+describe("batch", function() {
+  afterEach(function() {
+    sandbox.restore()
+  })
+
   it('should run succesfully', function(done) {
-    sinon.stub(Client.prototype, 'connect').callsFake(function() {
+    sandbox.stub(Client.prototype, 'connect').callsFake(function() {
       return Promise.resolve();
     });
 
-    sinon.stub(Client.prototype, 'list').callsFake(function() {
+    sandbox.stub(Client.prototype, 'list').callsFake(function() {
       return Promise.resolve([{name: "meow", type: '-'}]);
     });
 
-    sinon.stub(Client.prototype, 'get').callsFake(function() {
-      return Promise.resolve('meow3');
+    sandbox.stub(Client.prototype, 'get').callsFake(function() {
+      return Promise.resolve({path: 'meow'})
     });
 
-    sinon.stub(Client.prototype, 'mkdir');
-    sinon.stub(Client.prototype, 'rename');
-    sinon.stub(Client.prototype, 'end');
+    sandbox.stub(Client.prototype, 'mkdir');
+    sandbox.stub(Client.prototype, 'rename');
+    sandbox.stub(Client.prototype, 'end');
 
-    sinon.stub(uploadToS3, 'putBatch').callsFake(function() {
+    sandbox.stub(uploadToS3, 'putBatch').callsFake(function(config, files) {
+      expect(files.length).to.equal(1)
+      expect(files[0].key).to.equal('meow')
       return Promise.resolve();
     });
 
@@ -42,14 +50,11 @@ describe("bypassSFTP", function() {
   });
 
   it('should handle errors', function(done) {
-    Client.prototype.connect.restore();
-    Client.prototype.end.restore();
-
-    sinon.stub(Client.prototype, 'connect').callsFake(function() {
+    sandbox.stub(Client.prototype, 'connect').callsFake(function() {
       return Promise.reject("meowlure");
     });
 
-    sinon.stub(Client.prototype, 'end');
+    sandbox.stub(Client.prototype, 'end');
 
     SftpToS3.batch(config)
       .catch((err) => {
