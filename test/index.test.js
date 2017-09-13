@@ -1,5 +1,6 @@
 'use strict';
 const expect = require('chai').expect;
+const tree = require('../lib/listTree')
 const sinon = require('sinon');
 const SftpToS3 = require('../index');
 const retrieveFileStreams = require('../lib/retrieveFileStreams');
@@ -77,3 +78,26 @@ describe("batch", function() {
     sinon.assert.calledOnce(Client.prototype.connect);
   });
 });
+
+describe('recursive', function() {
+  afterEach(function() {
+    sandbox.restore()
+  })
+
+  it('should call batch on each directory', function() {
+    var batch = sandbox.stub(SftpToS3, 'batch').callsFake(function() {
+      return Promise.resolve()
+    })
+
+    sandbox.stub(tree, 'list').callsFake(function() {
+      return Promise.resolve(['foo', 'foo/bar', 'foo/baz'])
+    })
+
+    return SftpToS3.recursive(config).then(() => {
+      sinon.assert.calledThrice(batch)
+      sinon.assert.calledWithMatch(batch, {fileDownloadDir: 'foo'})
+      sinon.assert.calledWithMatch(batch, {fileDownloadDir: 'foo/bar'})
+      sinon.assert.calledWithMatch(batch, {fileDownloadDir: 'foo/baz'})
+    })
+  })
+})

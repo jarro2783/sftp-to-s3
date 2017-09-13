@@ -1,8 +1,16 @@
+'use strict'
+
 const Client = require('ssh2-sftp-client')
-const listTree = require('./lib/listTree')
+const tree = require('./lib/listTree')
 const streamToString = require('./lib/streamToString')
 const retrieveFileStreams = require('./lib/retrieveFileStreams')
 const uploadToS3 = require('./lib/uploadToS3')
+
+function real_directory(config) {
+  return file => {
+    return file.type == 'd' && file.name != config.completedDir
+  }
+}
 
 exports.batch = function (config, client) {
   const sftp = client || new Client()
@@ -43,7 +51,16 @@ exports.batch = function (config, client) {
 exports.recursive = function(config) {
   const sftp = new Client()
 
-  listTree(sftp, config.fileDownloadDir, real_directories).
+  return tree.list(sftp, config.fileDownloadDir, real_directory(config)).
     then(function(directories) {
+      var promises = []
+      for (var i = 0; i != directories.length; ++i) {
+        var new_config = {}
+        Object.assign(new_config, config)
+        new_config.fileDownloadDir = directories[i]
+        promises.push(exports.batch(new_config, sftp))
+      }
+
+      return Promise.all(promises)
     })
 }
