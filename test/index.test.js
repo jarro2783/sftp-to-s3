@@ -9,6 +9,7 @@ const config = {
   aws: {
     bucket: 'my-bucket'
   },
+  completedDir: 'done',
   fileDownloadDir: 'foo'
 };
 
@@ -33,7 +34,12 @@ describe("batch", function() {
     });
 
     sandbox.stub(Client.prototype, 'mkdir');
-    sandbox.stub(Client.prototype, 'rename');
+
+    sandbox.stub(Client.prototype, 'rename').callsFake(function(from, to) {
+      expect(from).to.eq('foo/meow')
+      expect(to).to.eq('done/meow')
+    })
+
     sandbox.stub(Client.prototype, 'end');
 
     sandbox.stub(uploadToS3, 'putBatch').callsFake(function(config, files) {
