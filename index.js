@@ -30,15 +30,14 @@ exports.batch = function (config, client) {
       return sftp.list(config.fileDownloadDir)
     })
     .then((fileList) => {
-      fileList.forEach((file) => {
-        console.log('Downloading ' + file.name)
-      }
       return retrieveFileStreams(sftp, config, fileList, "sftp")
     })
     .then((fileStreams) => {
+      console.log('Converting streams to arrays')
       return streamToString(fileStreams)
     })
     .then((dataArray) => {
+      console.log('Uploading to S3')
       return uploadToS3.putBatch(config, dataArray)
     })
     .then((files) => {
