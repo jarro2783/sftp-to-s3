@@ -94,7 +94,11 @@ describe('recursive', function() {
     });
 
     sandbox.stub(tree, 'list').callsFake(function() {
-      return Promise.resolve(['foo', 'foo/bar', 'foo/baz'])
+      return Promise.resolve([
+        {name: 'foo'}, 
+        {name: 'foo/bar'},
+        {name: 'foo/baz'}
+      ])
     })
 
     return SftpToS3.recursive(config).then(() => {

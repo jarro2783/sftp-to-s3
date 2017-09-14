@@ -67,7 +67,7 @@ exports.recursive = function(config) {
       return Promise.all(directories.map(directory => {
         var new_config = {}
         Object.assign(new_config, config)
-        new_config.fileDownloadDir = directory
+        new_config.fileDownloadDir = directory.name
         return exports.batch(new_config, sftp)
       }))
     })
