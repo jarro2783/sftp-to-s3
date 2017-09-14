@@ -17,7 +17,7 @@ describe('uploadToS3', function() {
   it('should call putObject', function(done) {
     sinon.stub(S3, 'putObject').callsFake(function(params) {
       expect(params.Bucket).to.eq('my-bucket')
-      expect(params.Key).to.eq('/foo')
+      expect(params.Key).to.eq('logs/path/foo')
       expect(params.Body).to.eq('')
       return {
         promise: function() {
@@ -30,12 +30,14 @@ describe('uploadToS3', function() {
       aws: {
         bucket: 'my-bucket',
       },
-      fileDownloadDir: 'prefix'
+      s3_root: 'logs',
+      s3_strip: 'root',
+      fileDownloadDir: 'root/path'
     }
 
     uploadToS3.putBatch(config, [
       {
-        key: 'prefix/foo',
+        key: 'root/path/foo',
         data: []
       }
     ]).then((results) => {
