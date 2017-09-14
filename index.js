@@ -23,11 +23,16 @@ function checked_connect(client, connect, config) {
 exports.batch = function (config, client) {
   const sftp = client || new Client()
 
+  console.log('Executing in ' + config.fileDownloadDir)
+
   return checked_connect(sftp, typeof client === 'undefined', config.sftp)
     .then(() => {
       return sftp.list(config.fileDownloadDir)
     })
     .then((fileList) => {
+      fileList.forEach((file) => {
+        console.log('Downloading ' + file.name)
+      }
       return retrieveFileStreams(sftp, config, fileList, "sftp")
     })
     .then((fileStreams) => {
@@ -60,7 +65,7 @@ exports.batch = function (config, client) {
       sftp.end()
       return "ftp files uploaded"
     })
-    .catch( function(err) {
+    .catch(function(err) {
       console.error("Error", err)
       sftp.end()
       throw err
