@@ -57,7 +57,11 @@ exports.batch = function (config, client) {
       return sftp.list(config.fileDownloadDir)
     })
     .then((fileList) => {
-      return sequential(fileList.map(file => {
+      return sequential(fileList.filter(
+        file => {
+          return file.type == '-'
+        }
+      ).map(file => {
         return function(previous, responses, current) {
           return process_file(sftp, config, file)
         }

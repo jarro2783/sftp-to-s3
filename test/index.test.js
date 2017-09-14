@@ -27,7 +27,7 @@ describe("batch", function() {
     });
 
     sandbox.stub(Client.prototype, 'list').callsFake(function() {
-      return Promise.resolve([{name: "meow", type: '-'}]);
+      return Promise.resolve([{name: "meow", type: '-'}, {name: 'dir', type: 'd'}]);
     });
 
     sandbox.stub(Client.prototype, 'get').callsFake(function() {
