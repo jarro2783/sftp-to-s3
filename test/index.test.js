@@ -21,7 +21,7 @@ describe("batch", function() {
     sandbox.restore()
   })
 
-  it('should run succesfully', function(done) {
+  it('should run succesfully', function() {
     sandbox.stub(Client.prototype, 'connect').callsFake(function() {
       return Promise.resolve();
     });
@@ -34,11 +34,14 @@ describe("batch", function() {
       return Promise.resolve({path: 'meow'})
     });
 
-    sandbox.stub(Client.prototype, 'mkdir');
+    sandbox.stub(Client.prototype, 'mkdir').callsFake(function() {
+      return Promise.resolve()
+    });
 
     sandbox.stub(Client.prototype, 'rename').callsFake(function(from, to) {
       expect(from).to.eq('foo/meow')
-      expect(to).to.eq('done/meow')
+      expect(to).to.eq('foo/done/meow')
+      return Promise.resolve()
     })
 
     sandbox.stub(Client.prototype, 'end');
@@ -51,16 +54,15 @@ describe("batch", function() {
       return Promise.resolve();
     });
 
-    SftpToS3.batch(config)
+    return SftpToS3.batch(config)
       .then((success) => {
+        sinon.assert.calledOnce(Client.prototype.connect);
         sinon.assert.calledTwice(Client.prototype.list);
         sinon.assert.calledOnce(Client.prototype.mkdir);
         sinon.assert.calledOnce(Client.prototype.rename);
         sinon.assert.calledOnce(Client.prototype.end);
         expect(success).to.equal("ftp files uploaded");
-        done()
       })
-    sinon.assert.calledOnce(Client.prototype.connect);
   });
 
   it('should handle errors', function(done) {

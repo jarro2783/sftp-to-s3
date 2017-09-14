@@ -37,14 +37,25 @@ exports.batch = function (config, client) {
       return uploadToS3.putBatch(config, dataArray)
     })
     .then((files) => {
-      sftp.mkdir(config.completedDir, true)
-      return sftp.list(config.fileDownloadDir)
+      var create = config.fileDownloadDir + '/' + config.completedDir
+      return sftp.mkdir(create, true).catch(err => {
+        throw 'Unable to create: ' + create
+      }).then(() => {
+        return sftp.list(config.fileDownloadDir)
+      })
     })
     .then((files) => {
-      files.map((file) => {
-        sftp.rename(config.fileDownloadDir + '/' + file.name,
-          config.completedDir + '/' + file.name)
-      })
+      return Promise.all(files.map(file => {
+        if (file.type == '-') {
+          var source = config.fileDownloadDir + '/' + file.name
+          var dest = config.fileDownloadDir + '/' + config.completedDir + '/' + file.name
+          console.log('Renaming ' + source + ' to ' + dest)
+          return sftp.rename(source, dest).catch(err => {
+            throw 'Error renaming ' + source + ' to ' + dest + ': ' + err
+          })
+        }
+      }))
+    }).then(() => {
       console.log("upload finished")
       sftp.end()
       return "ftp files uploaded"
