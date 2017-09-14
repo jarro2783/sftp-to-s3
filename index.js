@@ -89,11 +89,13 @@ exports.recursive = function(config) {
       return tree.list(sftp, config.fileDownloadDir, real_directory(config))
     })
     .then(function(directories) {
-      return Promise.all(directories.map(directory => {
+      return sequential(directories.map(directory => {
         var new_config = {}
         Object.assign(new_config, config)
         new_config.fileDownloadDir = directory
-        return exports.batch(new_config, sftp)
+        return (previous, responses, current) => {
+          return exports.batch(new_config, sftp)
+        }
       }))
     })
 }
