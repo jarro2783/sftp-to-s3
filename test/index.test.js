@@ -57,7 +57,7 @@ describe("batch", function() {
     return SftpToS3.batch(config)
       .then((success) => {
         sinon.assert.calledOnce(Client.prototype.connect);
-        sinon.assert.calledTwice(Client.prototype.list);
+        sinon.assert.calledOnce(Client.prototype.list);
         sinon.assert.calledOnce(Client.prototype.mkdir);
         sinon.assert.calledOnce(Client.prototype.rename);
         sinon.assert.calledOnce(Client.prototype.end);

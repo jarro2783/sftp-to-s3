@@ -2,6 +2,7 @@
 
 const Client = require('ssh2-sftp-client')
 const tree = require('./lib/listTree')
+const sequential = require('promise-sequential')
 const streamToString = require('./lib/streamToString')
 const retrieveFileStreams = require('./lib/retrieveFileStreams')
 const uploadToS3 = require('./lib/uploadToS3')
@@ -20,6 +21,28 @@ function checked_connect(client, connect, config) {
   }
 }
 
+function rename(sftp, config, file) {
+  var source = config.fileDownloadDir + '/' + file.name
+  var dest = config.fileDownloadDir + '/' + config.completedDir + '/' + file.name
+  console.log('Renaming ' + source + ' to ' + dest)
+  return sftp.rename(source, dest).catch(err => {
+    throw 'Error renaming ' + source + ' to ' + dest + ': ' + err
+  })
+}
+
+function process_file(sftp, config, file) {
+  return retrieveFileStreams(sftp, config, [file], 'sftp')
+    .then(function(streams) {
+      return streamToString(streams)
+    })
+    .then(function(array) {
+      return uploadToS3.putBatch(config, array);
+    })
+    .then(function() {
+      return rename(sftp, config, file)
+    })
+}
+
 exports.batch = function (config, client) {
   const sftp = client || new Client()
 
@@ -27,36 +50,16 @@ exports.batch = function (config, client) {
 
   return checked_connect(sftp, typeof client === 'undefined', config.sftp)
     .then(() => {
+      var create = config.fileDownloadDir + '/' + config.completedDir
+      return sftp.mkdir(create, true)
+    })
+    .then(() => {
       return sftp.list(config.fileDownloadDir)
     })
     .then((fileList) => {
-      return retrieveFileStreams(sftp, config, fileList, "sftp")
-    })
-    .then((fileStreams) => {
-      console.log('Converting streams to arrays')
-      return streamToString(fileStreams)
-    })
-    .then((dataArray) => {
-      console.log('Uploading to S3')
-      return uploadToS3.putBatch(config, dataArray)
-    })
-    .then((files) => {
-      var create = config.fileDownloadDir + '/' + config.completedDir
-      return sftp.mkdir(create, true).catch(err => {
-        throw 'Unable to create: ' + create
-      }).then(() => {
-        return sftp.list(config.fileDownloadDir)
-      })
-    })
-    .then((files) => {
-      return Promise.all(files.map(file => {
-        if (file.type == '-') {
-          var source = config.fileDownloadDir + '/' + file.name
-          var dest = config.fileDownloadDir + '/' + config.completedDir + '/' + file.name
-          console.log('Renaming ' + source + ' to ' + dest)
-          return sftp.rename(source, dest).catch(err => {
-            throw 'Error renaming ' + source + ' to ' + dest + ': ' + err
-          })
+      return sequential(fileList.map(file => {
+        return function(previous, responses, current) {
+          return process_file(sftp, config, file)
         }
       }))
     }).then(() => {
