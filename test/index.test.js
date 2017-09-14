@@ -97,9 +97,9 @@ describe('recursive', function() {
 
     sandbox.stub(tree, 'list').callsFake(function() {
       return Promise.resolve([
-        {name: 'foo'}, 
-        {name: 'foo/bar'},
-        {name: 'foo/baz'}
+        'foo', 
+        'foo/bar',
+        'foo/baz'
       ])
     })
 
