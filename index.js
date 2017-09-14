@@ -12,10 +12,18 @@ function real_directory(config) {
   }
 }
 
+function checked_connect(client, connect, config) {
+  if (connect) {
+    return client.connect(config)
+  } else {
+    return Promise.resolve()
+  }
+}
+
 exports.batch = function (config, client) {
   const sftp = client || new Client()
 
-  return sftp.connect(config.sftp)
+  return checked_connect(sftp, typeof client === 'undefined', config.sftp)
     .then(() => {
       return sftp.list(config.fileDownloadDir)
     })
@@ -51,16 +59,16 @@ exports.batch = function (config, client) {
 exports.recursive = function(config) {
   const sftp = new Client()
 
-  return tree.list(sftp, config.fileDownloadDir, real_directory(config)).
-    then(function(directories) {
-      var promises = []
-      for (var i = 0; i != directories.length; ++i) {
+  return sftp.connect(config.sftp)
+    .then(() => {
+      return tree.list(sftp, config.fileDownloadDir, real_directory(config))
+    })
+    .then(function(directories) {
+      return Promise.all(directories.map(directory => {
         var new_config = {}
         Object.assign(new_config, config)
-        new_config.fileDownloadDir = directories[i]
-        promises.push(exports.batch(new_config, sftp))
-      }
-
-      return Promise.all(promises)
+        new_config.fileDownloadDir = directory
+        return exports.batch(new_config, sftp)
+      }))
     })
 }

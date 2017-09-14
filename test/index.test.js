@@ -89,6 +89,10 @@ describe('recursive', function() {
       return Promise.resolve()
     })
 
+    sandbox.stub(Client.prototype, 'connect').callsFake(function() {
+      return Promise.resolve({});
+    });
+
     sandbox.stub(tree, 'list').callsFake(function() {
       return Promise.resolve(['foo', 'foo/bar', 'foo/baz'])
     })
