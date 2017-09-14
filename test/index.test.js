@@ -31,7 +31,7 @@ describe("batch", function() {
     });
 
     sandbox.stub(Client.prototype, 'get').callsFake(function() {
-      return Promise.resolve({path: 'meow'})
+      return Promise.resolve({path: 'foo/meow'})
     });
 
     sandbox.stub(Client.prototype, 'mkdir').callsFake(function() {
@@ -46,11 +46,11 @@ describe("batch", function() {
 
     sandbox.stub(Client.prototype, 'end');
 
-    sandbox.stub(uploadToS3, 'putBatch').callsFake(function(config, files) {
+    var s3 = sandbox.stub(uploadToS3, 'putBatch').callsFake(function(config, files) {
       expect(config).to.have.property('fileDownloadDir')
       expect(config).to.have.property('aws')
       expect(files.length).to.equal(1)
-      expect(files[0].key).to.equal('meow')
+      expect(files[0].key).to.equal('foo/meow')
       return Promise.resolve();
     });
 
@@ -61,6 +61,7 @@ describe("batch", function() {
         sinon.assert.calledOnce(Client.prototype.mkdir);
         sinon.assert.calledOnce(Client.prototype.rename);
         sinon.assert.calledOnce(Client.prototype.end);
+        sinon.assert.calledOnce(s3)
         expect(success).to.equal("ftp files uploaded");
       })
   });
