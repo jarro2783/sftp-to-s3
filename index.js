@@ -67,8 +67,8 @@ exports.batch = function (config, client) {
           return file.type == '-'
         }
       ).map(file => {
-        console.log("Download " + file)
         return function(previous, responses, current) {
+          console.log("Download " + file.name)
           return process_file(sftp, config, file)
         }
       }))
