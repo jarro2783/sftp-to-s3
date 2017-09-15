@@ -104,11 +104,18 @@ describe('recursive', function() {
       ])
     })
 
-    return SftpToS3.recursive(config).then(() => {
+    var end = sandbox.stub(Client.prototype, 'end')
+
+    return SftpToS3.recursive(config).then(result => {
       sinon.assert.calledThrice(batch)
       sinon.assert.calledWithMatch(batch, {fileDownloadDir: 'foo'})
       sinon.assert.calledWithMatch(batch, {fileDownloadDir: 'foo/bar'})
       sinon.assert.calledWithMatch(batch, {fileDownloadDir: 'foo/baz'})
+
+      expect(Array.isArray(result)).to.be.true
+      expect(result.length).to.eq(3)
+
+      sinon.assert.calledOnce(end)
     })
   })
 })

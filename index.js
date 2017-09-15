@@ -45,6 +45,7 @@ function process_file(sftp, config, file) {
 
 exports.batch = function (config, client) {
   const sftp = client || new Client()
+  const manage = typeof client === 'undefined'
 
   console.log('Executing in ' + config.fileDownloadDir)
 
@@ -71,12 +72,16 @@ exports.batch = function (config, client) {
       }))
     }).then(() => {
       console.log("upload finished")
-      sftp.end()
+      if (manage) {
+        sftp.end()
+      }
       return "ftp files uploaded"
     })
     .catch(function(err) {
       console.error("Error", err)
-      sftp.end()
+      if (manage) {
+        sftp.end()
+      }
       throw err
     })
 }
@@ -89,7 +94,9 @@ exports.recursive = function(config) {
       return tree.list(sftp, config.fileDownloadDir, real_directory(config))
     })
     .then(function(directories) {
+      console.log("Descending into " + directories)
       return sequential(directories.map(directory => {
+        console.log("Looking at " + directory)
         var new_config = {}
         Object.assign(new_config, config)
         new_config.fileDownloadDir = directory
@@ -97,5 +104,11 @@ exports.recursive = function(config) {
           return exports.batch(new_config, sftp)
         }
       }))
+    }).then(result => {
+      sftp.end()
+      return result
+    }).catch(err => {
+      sftp.end()
+      throw err
     })
 }
