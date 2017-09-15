@@ -59,7 +59,9 @@ exports.batch = function (config, client) {
     })
     .then((fileList) => {
       console.log("Downloading:")
-      console.log(fileList)
+      fileList.forEach(file => {
+        console.log(file.name)
+      })
       return sequential(fileList.filter(
         file => {
           return file.type == '-'
