@@ -8,22 +8,28 @@ const S3 = {
   putObject: function() {
   }
 }
+const sandbox = sinon.createSandbox()
+const s3Promise = {
+  promise: function() {
+    return Promise.resolve()
+  }
+}
 
 describe('uploadToS3', function() {
-  sinon.stub(AWS, 'S3').callsFake(function() {
+  afterEach(() => {
+    sandbox.restore()
+  })
+
+  sandbox.stub(AWS, 'S3').callsFake(function() {
     return S3
   })
 
   it('should call putObject', function() {
-    sinon.stub(S3, 'putObject').callsFake(function(params) {
+    sandbox.stub(S3, 'putObject').callsFake(function(params) {
       expect(params.Bucket).to.eq('my-bucket')
       expect(params.Key).to.eq('logs/path/foo')
       expect(params.Body).to.eq('')
-      return {
-        promise: function() {
-          return Promise.resolve()
-        }
-      }
+      return s3Promise
     })
 
     var config = {
@@ -41,5 +47,36 @@ describe('uploadToS3', function() {
         data: []
       }
     )
+  })
+
+  describe('without a root path', function() {
+    it('should have the correct key', function() {
+      sandbox.stub(AWS, 'S3').callsFake(() => {
+        return S3
+      })
+
+      sandbox.stub(S3, 'putObject').callsFake(function(params) {
+        expect(params.Bucket).to.eq('my-bucket')
+        expect(params.Key).to.eq('path/foo')
+
+        return s3Promise
+      })
+
+      var config = {
+        aws: {
+          bucket: 'my-bucket'
+        },
+        s3_root: '',
+        s3_strip: 'root',
+        fileDownloadDir: 'root/path'
+      }
+
+      return uploadToS3.put(config,
+        {
+          key: 'root/path/foo',
+          data: []
+        }
+      )
+    })
   })
 })
