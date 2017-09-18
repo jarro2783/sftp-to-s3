@@ -32,7 +32,7 @@ describe('retrieveFileStreams', function() {
       fileDownloadDir: 'prefix'
     }
 
-    return streams(sftp, config, [make_file('foo'), make_file('bar')], 'sftp')
+    return streams(sftp, config, [make_file('foo'), make_file('bar')])
       .then(() => {
         sinon.assert.calledTwice(get)
         sinon.assert.calledWith(get, 'prefix/foo')

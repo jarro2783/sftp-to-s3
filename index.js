@@ -31,7 +31,7 @@ function rename(sftp, config, file) {
 }
 
 function process_file(sftp, config, file) {
-  return retrieveFileStreams(sftp, config, [file], 'sftp')
+  return retrieveFileStreams(sftp, config, [file])
     .then(function(streams) {
       return streamToString(streams)
     })

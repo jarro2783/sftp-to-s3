@@ -3,7 +3,6 @@ const expect = require('chai').expect
 const tree = require('../lib/listTree')
 const sinon = require('sinon')
 const SftpToS3 = require('../index')
-const retrieveFileStreams = require('../lib/retrieveFileStreams')
 const Client = require('ssh2-sftp-client')
 const uploadToS3 = require('../lib/uploadToS3')
 const config = {
