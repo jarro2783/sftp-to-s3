@@ -66,7 +66,6 @@ describe('uploadToS3', function() {
         aws: {
           bucket: 'my-bucket'
         },
-        s3_root: '',
         s3_strip: 'root',
         fileDownloadDir: 'root/path'
       }
