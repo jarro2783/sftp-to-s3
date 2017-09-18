@@ -16,7 +16,7 @@ const config = {
 
 const sandbox = sinon.createSandbox()
 
-describe("batch", function() {
+describe('batch', function() {
   afterEach(function() {
     sandbox.restore()
   })
@@ -27,7 +27,7 @@ describe("batch", function() {
     });
 
     sandbox.stub(Client.prototype, 'list').callsFake(function() {
-      return Promise.resolve([{name: "meow", type: '-'}, {name: 'dir', type: 'd'}]);
+      return Promise.resolve([{name: 'meow', type: '-'}, {name: 'dir', type: 'd'}]);
     });
 
     sandbox.stub(Client.prototype, 'get').callsFake(function() {
@@ -62,20 +62,20 @@ describe("batch", function() {
         sinon.assert.calledOnce(Client.prototype.rename);
         sinon.assert.calledOnce(Client.prototype.end);
         sinon.assert.calledOnce(s3)
-        expect(success).to.equal("ftp files uploaded");
+        expect(success).to.equal('ftp files uploaded');
       })
   });
 
   it('should handle errors', function(done) {
     sandbox.stub(Client.prototype, 'connect').callsFake(function() {
-      return Promise.reject("meowlure");
+      return Promise.reject('meowlure');
     });
 
     sandbox.stub(Client.prototype, 'end');
 
     SftpToS3.batch(config)
       .catch((err) => {
-        expect(err).to.equal("meowlure");
+        expect(err).to.equal('meowlure');
         done()
       })
     sinon.assert.calledOnce(Client.prototype.connect);

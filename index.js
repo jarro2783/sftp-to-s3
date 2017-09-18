@@ -58,7 +58,7 @@ exports.batch = function (config, client) {
       return sftp.list(config.fileDownloadDir)
     })
     .then((fileList) => {
-      console.log("Downloading:")
+      console.log('Downloading:')
       fileList.forEach(file => {
         console.log(file.name)
       })
@@ -68,19 +68,19 @@ exports.batch = function (config, client) {
         }
       ).map(file => {
         return function(previous, responses, current) {
-          console.log("Download " + file.name)
+          console.log('Download ' + file.name)
           return process_file(sftp, config, file)
         }
       }))
     }).then(() => {
-      console.log("upload finished")
+      console.log('upload finished')
       if (manage) {
         sftp.end()
       }
-      return "ftp files uploaded"
+      return 'ftp files uploaded'
     })
     .catch(function(err) {
-      console.error("Error", err)
+      console.error('Error', err)
       if (manage) {
         sftp.end()
       }
@@ -96,9 +96,9 @@ exports.recursive = function(config) {
       return tree.list(sftp, config.fileDownloadDir, real_directory(config))
     })
     .then(function(directories) {
-      console.log("Descending into " + directories)
+      console.log('Descending into ' + directories)
       return sequential(directories.map(directory => {
-        console.log("Looking at " + directory)
+        console.log('Looking at ' + directory)
         var new_config = {}
         Object.assign(new_config, config)
         new_config.fileDownloadDir = directory
