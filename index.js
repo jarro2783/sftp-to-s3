@@ -31,12 +31,12 @@ function rename(sftp, config, file) {
 }
 
 function process_file(sftp, config, file) {
-  return retrieveFileStreams(sftp, config, [file])
-    .then(function(streams) {
-      return streamToString(streams)
+  return retrieveFileStreams(sftp, config, file)
+    .then(function(stream) {
+      return streamToString(stream)
     })
-    .then(function(array) {
-      return uploadToS3.putBatch(config, array);
+    .then(function(data) {
+      return uploadToS3.put(config, data);
     })
     .then(function() {
       return rename(sftp, config, file)

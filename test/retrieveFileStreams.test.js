@@ -2,7 +2,7 @@
 
 const expect = require('chai').expect
 const sinon = require('sinon')
-const streams = require('../lib/retrieveFileStreams')
+const stream = require('../lib/retrieveFileStreams')
 
 const sandbox = sinon.createSandbox()
 
@@ -32,11 +32,10 @@ describe('retrieveFileStreams', function() {
       fileDownloadDir: 'prefix'
     }
 
-    return streams(sftp, config, [make_file('foo'), make_file('bar')])
+    return stream(sftp, config, make_file('foo'))
       .then(() => {
-        sinon.assert.calledTwice(get)
+        sinon.assert.calledOnce(get)
         sinon.assert.calledWith(get, 'prefix/foo')
-        sinon.assert.calledWith(get, 'prefix/bar')
       })
   })
 })

@@ -45,11 +45,10 @@ describe('batch', function() {
 
     sandbox.stub(Client.prototype, 'end')
 
-    var s3 = sandbox.stub(uploadToS3, 'putBatch').callsFake(function(config, files) {
+    var s3 = sandbox.stub(uploadToS3, 'put').callsFake(function(config, file) {
       expect(config).to.have.property('fileDownloadDir')
       expect(config).to.have.property('aws')
-      expect(files.length).to.equal(1)
-      expect(files[0].key).to.equal('foo/meow')
+      expect(file.key).to.equal('foo/meow')
       return Promise.resolve()
     })
 
