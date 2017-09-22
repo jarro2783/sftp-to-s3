@@ -35,7 +35,7 @@ describe('retrieveFileStreams', function() {
     return stream(sftp, config, make_file('foo'))
       .then(() => {
         sinon.assert.calledOnce(get)
-        sinon.assert.calledWith(get, 'prefix/foo')
+        sinon.assert.calledWith(get, 'prefix/foo', false, null)
       })
   })
 })
