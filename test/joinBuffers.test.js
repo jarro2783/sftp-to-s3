@@ -2,11 +2,11 @@
 
 const expect = require('chai').expect
 const sinon = require('sinon')
-const stringify = require('../lib/stringify')
+const joinBuffers = require('../lib/joinBuffers')
 
 const sandbox = sinon.createSandbox()
 
-describe ('stringify', () => {
+describe ('joinBuffers', () => {
   afterEach(() => {
     sandbox.restore()
   })
@@ -16,6 +16,6 @@ describe ('stringify', () => {
   })
 
   it('should join an array of arrays', () => {
-    expect(stringify(input)).to.eq("ABCDEF\x8b")
+    expect(joinBuffers(input).equals(Buffer.from("ABCDEF\x8b", 'binary'))).true
   })
 })
