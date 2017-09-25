@@ -28,7 +28,7 @@ describe('uploadToS3', function() {
     sandbox.stub(S3, 'putObject').callsFake(function(params) {
       expect(params.Bucket).to.eq('my-bucket')
       expect(params.Key).to.eq('logs/path/foo')
-      expect(params.Body).to.eq('')
+      expect(params.Body).to.eq('\x86')
       return s3Promise
     })
 
@@ -44,7 +44,7 @@ describe('uploadToS3', function() {
     return uploadToS3.put(config,
       {
         key: 'root/path/foo',
-        data: []
+        data: '\x86'
       }
     )
   })
