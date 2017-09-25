@@ -36,7 +36,10 @@ function process_file(sftp, config, file) {
       return streamToString(stream)
     })
     .then(function(data) {
-      return uploadToS3.put(config, data);
+      var contents = data.reduce((a, b) => {
+        return a.concat(b.toString('binary'))
+      }, [])
+      return uploadToS3.put(config, contents);
     })
     .then(function() {
       return rename(sftp, config, file)
