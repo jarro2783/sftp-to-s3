@@ -11,11 +11,11 @@ describe ('stringify', () => {
     sandbox.restore()
   })
   
-  var input = [[0x41, 0x42], [0x43, 0x44], [0x45, 0x46]].map(part => {
+  var input = [[0x41, 0x42], [0x43, 0x44], [0x45, 0x46, 0x8b]].map(part => {
     return Buffer.from(part)
   })
 
   it('should join an array of arrays', () => {
-    expect(stringify(input)).to.eq('ABCDEF')
+    expect(stringify(input)).to.eq("ABCDEF\x8b")
   })
 })
