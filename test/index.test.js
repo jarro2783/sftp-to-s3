@@ -1,4 +1,6 @@
 'use strict'
+
+const cleanupDone = require('../lib/cleanupDone')
 const expect = require('chai').expect
 const tree = require('../lib/listTree')
 const sinon = require('sinon')
@@ -52,6 +54,10 @@ describe('batch', function() {
       return Promise.resolve()
     })
 
+    var cleanup = sandbox.stub(cleanupDone, 'cleanup').callsFake(() => {
+      return Promise.resolve()
+    })
+
     return SftpToS3.batch(config)
       .then((success) => {
         sinon.assert.calledOnce(Client.prototype.connect)
@@ -60,6 +66,7 @@ describe('batch', function() {
         sinon.assert.calledOnce(Client.prototype.rename)
         sinon.assert.calledOnce(Client.prototype.end)
         sinon.assert.calledOnce(s3)
+        sinon.assert.calledOnce(cleanup)
         expect(success).to.equal('ftp files uploaded')
       })
   })

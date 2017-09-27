@@ -1,6 +1,7 @@
 'use strict'
 
 const Client = require('ssh2-sftp-client')
+const cleanupDone = require('./lib/cleanupDone')
 const tree = require('./lib/listTree')
 const sequential = require('promise-sequential')
 const streamToString = require('./lib/streamToString')
@@ -72,7 +73,11 @@ exports.batch = function (config, client) {
           return process_file(sftp, config, file)
         }
       }))
-    }).then(() => {
+    })
+    .then(() => {
+      return cleanupDone.cleanup(config, sftp)
+    })
+    .then(() => {
       console.log('upload finished')
       if (manage) {
         sftp.end()
