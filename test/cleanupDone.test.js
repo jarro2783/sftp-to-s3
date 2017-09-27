@@ -50,4 +50,20 @@ describe('cleanupDone', () => {
         sinon.assert.calledWith(del, 'foo/done/foo')
       })
   })
+
+  it('handles missing directories', () => {
+    sandbox.stub(Client.prototype, 'list').callsFake(path => {
+      return Promise.reject('No such path')
+    })
+
+    sandbox.stub(Client.prototype, 'delete')
+
+    var sftp = new Client
+
+    return cleanupDone.cleanup(config, sftp)
+      .then(() => {
+        sinon.assert.calledOnce(Client.prototype.list)
+        sinon.assert.notCalled(Client.prototype.delete)
+      })
+  })
 })
