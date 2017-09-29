@@ -8,6 +8,25 @@ const streamToString = require('./lib/streamToString')
 const retrieveFileStreams = require('./lib/retrieveFileStreams')
 const uploadToS3 = require('./lib/uploadToS3')
 
+function validate_property(o, name) {
+  if (!(name in o)) {
+    throw Error('configuration is missing ' + name)
+  }
+}
+
+function Config(parameters) {
+  validate_property(parameters, 'aws')
+  validate_property(parameters, 'completedDir')
+  validate_property(parameters, 'fileDownloadDir')
+  validate_property(parameters, 'ssh')
+
+  this.aws = parameters.aws
+  this.completedDir = parameters.completedDir
+  this.fileDownloadDir = parameters.fileDownloadDir
+  this.ssh = parameters.ssh
+  this.fileRetentionDays = parameters.fileRetentionDays || 14
+}
+
 function real_directory(config) {
   return file => {
     return file.type == 'd' && file.name != config.completedDir
@@ -45,6 +64,10 @@ function process_file(sftp, config, file) {
 }
 
 exports.batch = function (config, client) {
+  if (!(config instanceof Config)) {
+    return Promise.reject(Error("Configuration is not an instance of Config"))
+  }
+
   const sftp = client || new Client()
   const manage = typeof client === 'undefined'
 
@@ -119,3 +142,5 @@ exports.recursive = function(config) {
       throw err
     })
 }
+
+exports.Config = Config

@@ -1,21 +1,47 @@
 'use strict'
 
 const cleanupDone = require('../lib/cleanupDone')
-const expect = require('chai').expect
+const chai = require('chai')
+const expect = chai.expect
+const fail = chai.fail
 const tree = require('../lib/listTree')
 const sinon = require('sinon')
 const SftpToS3 = require('../index')
 const Client = require('ssh2-sftp-client')
 const uploadToS3 = require('../lib/uploadToS3')
-const config = {
+const parameters = {
   aws: {
     bucket: 'my-bucket'
   },
   completedDir: 'done',
-  fileDownloadDir: 'foo'
+  fileDownloadDir: 'foo',
+  ssh: {},
 }
 
+const config = new SftpToS3.Config(parameters)
+
 const sandbox = sinon.createSandbox()
+
+describe('Config', function() {
+  context('when the aws parameter is missing', () => {
+    it('throws an exception', () => {
+      var c = {
+        completedDir: 'done',
+        fileDownloadDir: 'path',
+        ssh: {}
+      }
+
+      expect(() => {new SftpToS3.Config(c)}).to.throw()
+    })
+  })
+
+  context('when fileRetentionDays is not set', () => {
+    it('defaults to 14', () => {
+      var c = new SftpToS3.Config(config)
+      expect(c.fileRetentionDays).to.eq(14)
+    })
+  })
+})
 
 describe('batch', function() {
   afterEach(function() {
@@ -84,6 +110,17 @@ describe('batch', function() {
         done()
       })
     sinon.assert.calledOnce(Client.prototype.connect)
+  })
+
+  context('when the configuration is the wrong object', () => {
+    it ('rejects', () => {
+      return SftpToS3.batch({})
+        .then(() => {
+        fail('The promise was resolved')
+      }, err => {
+        expect(err.message).to.eq('Configuration is not an instance of Config')
+      })
+    })
   })
 })
 
