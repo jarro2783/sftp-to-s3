@@ -25,6 +25,8 @@ function Config(parameters) {
   this.fileDownloadDir = parameters.fileDownloadDir
   this.ssh = parameters.ssh
   this.fileRetentionDays = parameters.fileRetentionDays || 14
+
+  this.logger = parameters.logger || (() => {})
 }
 
 function real_directory(config) {
@@ -44,7 +46,7 @@ function checked_connect(client, connect, config) {
 function rename(sftp, config, file) {
   var source = config.fileDownloadDir + '/' + file.name
   var dest = config.fileDownloadDir + '/' + config.completedDir + '/' + file.name
-  console.log('Renaming ' + source + ' to ' + dest)
+  config.logger('Renaming ' + source + ' to ' + dest)
   return sftp.rename(source, dest).catch(err => {
     throw 'Error renaming ' + source + ' to ' + dest + ': ' + err
   })
@@ -71,7 +73,7 @@ exports.batch = function (config, client) {
   const sftp = client || new Client()
   const manage = typeof client === 'undefined'
 
-  console.log('Executing in ' + config.fileDownloadDir)
+  config.logger('Executing in ' + config.fileDownloadDir)
 
   return checked_connect(sftp, typeof client === 'undefined', config.sftp)
     .then(() => {
@@ -82,9 +84,9 @@ exports.batch = function (config, client) {
       return sftp.list(config.fileDownloadDir)
     })
     .then((fileList) => {
-      console.log('Downloading:')
+      config.logger('Downloading:')
       fileList.forEach(file => {
-        console.log(file.name)
+        config.logger(file.name)
       })
       return sequential(fileList.filter(
         file => {
@@ -92,7 +94,7 @@ exports.batch = function (config, client) {
         }
       ).map(file => {
         return function(previous, responses, current) {
-          console.log('Download ' + file.name)
+          config.logger('Download ' + file.name)
           return process_file(sftp, config, file)
         }
       }))
@@ -101,7 +103,7 @@ exports.batch = function (config, client) {
       return cleanupDone.cleanup(config, sftp)
     })
     .then(() => {
-      console.log('upload finished')
+      config.logger('upload finished')
       if (manage) {
         sftp.end()
       }
@@ -124,9 +126,9 @@ exports.recursive = function(config) {
       return tree.list(sftp, config.fileDownloadDir, real_directory(config))
     })
     .then(function(directories) {
-      console.log('Descending into ' + directories)
+      config.logger('Descending into ' + directories)
       return sequential(directories.map(directory => {
-        console.log('Looking at ' + directory)
+        config.logger('Looking at ' + directory)
         var new_config = {}
         Object.assign(new_config, config)
         new_config.fileDownloadDir = directory
