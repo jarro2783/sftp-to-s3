@@ -8,13 +8,12 @@ const Config = require('../index').Config
 
 const sandbox = sinon.createSandbox()
 
-const config = new Config({
-  aws: {},
+const config = {
   completedDir: 'done',
   fileDownloadDir: 'foo',
   fileRetentionDays: 1,
-  ssh: {},
-})
+  logger: () => {},
+}
 
 describe('cleanupDone', () => {
   afterEach(() => {

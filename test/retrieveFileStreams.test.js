@@ -28,14 +28,19 @@ describe('retrieveFileStreams', function() {
       return Promise.resolve()
     })
 
-    var config = {
-      fileDownloadDir: 'prefix'
-    }
+    var config = ({
+      fileDownloadDir: 'prefix',
+      logger: () => {},
+    })
+
+    var log = sandbox.stub(config, 'logger')
 
     return stream(sftp, config, make_file('foo'))
       .then(() => {
         sinon.assert.calledOnce(get)
         sinon.assert.calledWith(get, 'prefix/foo', false, null)
+        sinon.assert.calledOnce(log)
+        sinon.assert.calledWith(log, "Downloading 'prefix/foo'")
       })
   })
 })

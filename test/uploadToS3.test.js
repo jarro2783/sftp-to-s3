@@ -38,15 +38,21 @@ describe('uploadToS3', function() {
       },
       s3_root: 'logs',
       s3_strip: 'root',
-      fileDownloadDir: 'root/path'
+      fileDownloadDir: 'root/path',
+      logger: () => {},
     }
+
+    var log = sandbox.stub(config, 'logger')
 
     return uploadToS3.put(config,
       {
         key: 'root/path/foo',
         data: '\x86'
       }
-    )
+    ).then(() => {
+      sinon.assert.calledOnce(log)
+      sinon.assert.calledWith(log, "Uploading 'root/path/foo' to 'logs/path/foo'")
+    })
   })
 
   describe('without a root path', function() {
@@ -67,7 +73,8 @@ describe('uploadToS3', function() {
           bucket: 'my-bucket'
         },
         s3_strip: 'root',
-        fileDownloadDir: 'root/path'
+        fileDownloadDir: 'root/path',
+        logger: () => {},
       }
 
       return uploadToS3.put(config,
