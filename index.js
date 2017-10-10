@@ -31,7 +31,7 @@ function rename(sftp, config, file) {
   })
 }
 
-function process_file(sftp, config, file) {
+function process_file(sftp, config, file, errors) {
   return retrieveFileStreams(sftp, config, file)
     .then(function(stream) {
       return streamToString(stream)
@@ -42,6 +42,9 @@ function process_file(sftp, config, file) {
     .then(function() {
       return rename(sftp, config, file)
     })
+    .catch(function(error) {
+      errors.push(error)
+    })
 }
 
 exports.batch = function (config, client) {
@@ -50,10 +53,16 @@ exports.batch = function (config, client) {
 
   console.log('Executing in ' + config.fileDownloadDir)
 
+  var errors = []
+
   return checked_connect(sftp, typeof client === 'undefined', config.sftp)
     .then(() => {
       var create = config.fileDownloadDir + '/' + config.completedDir
-      return sftp.mkdir(create, true)
+      console.log('Creating ' + create)
+      return sftp.mkdir(create, false)
+        .catch((error) => {
+          errors.push(error)
+        })
     })
     .then(() => {
       return sftp.list(config.fileDownloadDir)
@@ -82,7 +91,12 @@ exports.batch = function (config, client) {
       if (manage) {
         sftp.end()
       }
-      return 'ftp files uploaded'
+
+      if (errors.length > 0) {
+        throw errors
+      } else {
+        return 'ftp files uploaded'
+      }
     })
     .catch(function(err) {
       console.error('Error', err)

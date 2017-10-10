@@ -62,7 +62,10 @@ describe('batch', function() {
       .then((success) => {
         sinon.assert.calledOnce(Client.prototype.connect)
         sinon.assert.calledOnce(Client.prototype.list)
+
         sinon.assert.calledOnce(Client.prototype.mkdir)
+        sinon.assert.calledWith(Client.prototype.mkdir, 'foo/done', false)
+
         sinon.assert.calledOnce(Client.prototype.rename)
         sinon.assert.calledOnce(Client.prototype.end)
         sinon.assert.calledOnce(s3)
