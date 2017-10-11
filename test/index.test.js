@@ -2,11 +2,13 @@
 
 const cleanupDone = require('../lib/cleanupDone')
 const expect = require('chai').expect
+const process = require('../lib/processFile')
 const tree = require('../lib/listTree')
 const sinon = require('sinon')
 const SftpToS3 = require('../index')
 const Client = require('ssh2-sftp-client')
 const uploadToS3 = require('../lib/uploadToS3')
+
 const config = {
   aws: {
     bucket: 'my-bucket'
@@ -31,28 +33,15 @@ describe('batch', function() {
       return Promise.resolve([{name: 'meow', type: '-'}, {name: 'dir', type: 'd'}])
     })
 
-    sandbox.stub(Client.prototype, 'get').callsFake(function() {
-      return Promise.resolve({path: 'foo/meow'})
-    })
-
     sandbox.stub(Client.prototype, 'mkdir').callsFake(function() {
       return Promise.resolve()
     })
 
-    sandbox.stub(Client.prototype, 'rename').callsFake(function(from, to) {
-      expect(from).to.eq('foo/meow')
-      expect(to).to.eq('foo/done/meow')
-      return Promise.resolve()
+    sandbox.stub(process, 'processFile').callsFake(() => {
+      return Promise.resolve('ftp files uploaded')
     })
 
     sandbox.stub(Client.prototype, 'end')
-
-    var s3 = sandbox.stub(uploadToS3, 'put').callsFake(function(config, file) {
-      expect(config).to.have.property('fileDownloadDir')
-      expect(config).to.have.property('aws')
-      expect(file.key).to.equal('foo/meow')
-      return Promise.resolve()
-    })
 
     var cleanup = sandbox.stub(cleanupDone, 'cleanup').callsFake(() => {
       return Promise.resolve()
@@ -61,14 +50,16 @@ describe('batch', function() {
     return SftpToS3.batch(config)
       .then((success) => {
         sinon.assert.calledOnce(Client.prototype.connect)
+
         sinon.assert.calledOnce(Client.prototype.list)
+        sinon.assert.calledWith(Client.prototype.list, 'foo')
 
         sinon.assert.calledOnce(Client.prototype.mkdir)
         sinon.assert.calledWith(Client.prototype.mkdir, 'foo/done', false)
 
-        sinon.assert.calledOnce(Client.prototype.rename)
+        sinon.assert.calledOnce(process.processFile)
+
         sinon.assert.calledOnce(Client.prototype.end)
-        sinon.assert.calledOnce(s3)
         sinon.assert.calledOnce(cleanup)
         expect(success).to.equal('ftp files uploaded')
       })

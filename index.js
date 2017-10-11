@@ -2,11 +2,9 @@
 
 const Client = require('ssh2-sftp-client')
 const cleanupDone = require('./lib/cleanupDone')
+const process = require('./lib/processFile')
 const tree = require('./lib/listTree')
 const sequential = require('promise-sequential')
-const streamToString = require('./lib/streamToString')
-const retrieveFileStreams = require('./lib/retrieveFileStreams')
-const uploadToS3 = require('./lib/uploadToS3')
 
 function real_directory(config) {
   return file => {
@@ -20,31 +18,6 @@ function checked_connect(client, connect, config) {
   } else {
     return Promise.resolve()
   }
-}
-
-function rename(sftp, config, file) {
-  var source = config.fileDownloadDir + '/' + file.name
-  var dest = config.fileDownloadDir + '/' + config.completedDir + '/' + file.name
-  console.log('Renaming ' + source + ' to ' + dest)
-  return sftp.rename(source, dest).catch(err => {
-    throw 'Error renaming ' + source + ' to ' + dest + ': ' + err
-  })
-}
-
-function process_file(sftp, config, file, errors) {
-  return retrieveFileStreams(sftp, config, file)
-    .then(function(stream) {
-      return streamToString(stream)
-    })
-    .then(function(data) {
-      return uploadToS3.put(config, data);
-    })
-    .then(function() {
-      return rename(sftp, config, file)
-    })
-    .catch(function(error) {
-      errors.push(error)
-    })
 }
 
 exports.batch = function (config, client) {
@@ -79,7 +52,7 @@ exports.batch = function (config, client) {
       ).map(file => {
         return function(previous, responses, current) {
           console.log('Download ' + file.name)
-          return process_file(sftp, config, file, errors)
+          return process.processFile(sftp, config, file, errors)
         }
       }))
     })
@@ -93,7 +66,7 @@ exports.batch = function (config, client) {
       }
 
       if (errors.length > 0) {
-        throw errors
+        throw Error(errors)
       } else {
         return 'ftp files uploaded'
       }
