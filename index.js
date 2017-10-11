@@ -79,7 +79,7 @@ exports.batch = function (config, client) {
       ).map(file => {
         return function(previous, responses, current) {
           console.log('Download ' + file.name)
-          return process_file(sftp, config, file)
+          return process_file(sftp, config, file, errors)
         }
       }))
     })
