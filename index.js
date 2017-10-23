@@ -40,20 +40,15 @@ exports.batch = function (config) {
       return sftp.list(config.fileDownloadDir)
     })
     .then((fileList) => {
-      winston.log('info', 'Downloading:')
-      fileList.forEach(file => {
-        winston.log('info', file.name)
-      })
-      return sequential(fileList.filter(
+      return Promise.all(fileList.filter(
         file => {
           return file.type == '-'
         }
       ).map(file => {
-        return function(previous, responses, current) {
           winston.log('info', 'Download ' + file.name)
-          return processFile.processFile(sftp, config, file, errors)
-        }
-      }))
+          return processFile.processFile(config, file, errors)
+        })
+      )
     })
     .then(() => {
       return cleanupDone.cleanup(config, sftp)
