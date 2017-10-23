@@ -19,23 +19,19 @@ function real_directory(config) {
   }
 }
 
-function checked_connect(client, connect, config) {
-  if (connect) {
-    return client.connect(config)
-  } else {
-    return Promise.resolve()
-  }
+function sftp_connect(client, config) {
+  return client.connect(config)
 }
 
-exports.batch = function (config, client) {
-  const sftp = client || new Client()
+exports.batch = function (config) {
+  const sftp = new Client()
   const manage = typeof client === 'undefined'
 
   winston.log('info', 'Executing in ' + config.fileDownloadDir)
 
   var errors = []
 
-  return checked_connect(sftp, typeof client === 'undefined', config.sftp)
+  return sftp_connect(sftp, config.sftp)
     .then(() => {
       var create = config.fileDownloadDir + '/' + config.completedDir
       winston.log('info', 'Creating ' + create)
@@ -68,9 +64,7 @@ exports.batch = function (config, client) {
     })
     .then(() => {
       winston.log('info', 'upload finished')
-      if (manage) {
-        sftp.end()
-      }
+      sftp.end()
 
       if (errors.length > 0) {
         throw Error(errors)
@@ -80,9 +74,7 @@ exports.batch = function (config, client) {
     })
     .catch(function(err) {
       winston.log('error', 'Error', err)
-      if (manage) {
-        sftp.end()
-      }
+      sftp.end()
       throw err
     })
 }
