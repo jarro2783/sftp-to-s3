@@ -8,6 +8,9 @@ const sinon = require('sinon')
 const SftpToS3 = require('../index')
 const Client = require('ssh2-sftp-client')
 const uploadToS3 = require('../lib/uploadToS3')
+const winston = require('winston')
+
+winston.level = 'off'
 
 const config = {
   aws: {
