@@ -19,10 +19,6 @@ function real_directory(config) {
   }
 }
 
-function sftp_connect(client, config) {
-  return client.connect(config)
-}
-
 exports.batch = function (config) {
   const sftp = new Client()
   const manage = typeof client === 'undefined'
@@ -31,7 +27,7 @@ exports.batch = function (config) {
 
   var errors = []
 
-  return sftp_connect(sftp, config.sftp)
+  return sftp.connect(config.sftp)
     .then(() => {
       var create = config.fileDownloadDir + '/' + config.completedDir
       winston.log('info', 'Creating ' + create)
